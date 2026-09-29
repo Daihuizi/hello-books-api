@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, make_response, request
+from flask import Blueprint, abort, make_response, request, Response
 from app.models.book import Book
 from ..db import db
 
@@ -68,3 +68,36 @@ def get_one_book(book_id):
         "title": book.title,
         "description": book.description,
     }
+
+
+@books_bp.put("/<book_id>")
+def update_book(book_id):
+    book = validate_book(book_id)
+    request_body = request.get_json()
+
+    book.title = request_body["title"]
+    book.description = request_body["description"]
+
+    db.session.commit()
+
+    return Response(status=204, mimetype="application/json")
+
+
+@books_bp.delete("/<book_id>")
+def delete_book(book_id):
+    book = validate_book(book_id)
+
+    db.session.delete(book)
+    db.session.commit()
+
+    return Response(status=204, mimetype="application/json")
+
+# “”“现在你有三个 endpoint：
+# POST /books          → 创建一本
+# GET  /books          → 读取所有 books
+# GET  /books/<book_id> → 读取指定的一本
+
+# 并且 validate_book() 负责：
+# book_id 不是数字 → 400
+# book 不存在      → 404
+# book 存在        → return Book object”“”
