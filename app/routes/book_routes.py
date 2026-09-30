@@ -1,3 +1,16 @@
+
+
+
+# “”“现在你有三个 endpoint：
+# POST /books          → 创建一本
+# GET  /books          → 读取所有 books
+# GET  /books/<book_id> → 读取指定的一本
+
+# 并且 validate_book() 负责：
+# book_id 不是数字 → 400
+# book 不存在      → 404
+# book 存在        → return Book object”“”
+
 from flask import Blueprint, abort, make_response, request, Response
 from app.models.book import Book
 from ..db import db
@@ -42,7 +55,17 @@ def create_book():
 
 @books_bp.get("")
 def get_all_books():
-    query = db.select(Book).order_by(Book.id)
+    query = db.select(Book)
+
+    title_param = request.args.get("title")
+    if title_param:
+        query = query.where(Book.title.ilike(f"%{title_param}%"))
+
+    description_param = request.args.get("description")
+    if description_param:
+        query = query.where(Book.description.ilike(f"%{description_param}%"))
+
+    query = query.order_by(Book.id)
     books = db.session.scalars(query)
 
     books_response = []
@@ -91,13 +114,3 @@ def delete_book(book_id):
     db.session.commit()
 
     return Response(status=204, mimetype="application/json")
-
-# “”“现在你有三个 endpoint：
-# POST /books          → 创建一本
-# GET  /books          → 读取所有 books
-# GET  /books/<book_id> → 读取指定的一本
-
-# 并且 validate_book() 负责：
-# book_id 不是数字 → 400
-# book 不存在      → 404
-# book 存在        → return Book object”“”
