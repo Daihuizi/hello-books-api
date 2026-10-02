@@ -64,3 +64,40 @@ def test_get_all_books_with_records(client, two_saved_books):
             "description": "i luv 2 climb rocks"
         }
     ]
+
+
+def test_create_book_missing_title(client):
+    # Act
+    response = client.post("/books", json={
+        "description": "The Best!"
+    })
+
+    # Assert
+    assert response.status_code == 400
+
+def test_create_book_missing_description(client):
+    # Act
+    response = client.post("/books", json={
+        "title": "New Book"
+    })
+
+    # Assert
+    assert response.status_code == 400
+
+
+def test_create_book_with_extra_key(client):
+    # Act
+    response = client.post("/books", json={
+        "title": "New Book",
+        "description": "The Best!",
+        "extra": "Extra Data"
+    })
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 201
+    assert response_body == {
+        "id": 1,
+        "title": "New Book",
+        "description": "The Best!"
+    }
